@@ -107,12 +107,13 @@ class BaseBackend:
     HAS_RUN_SALT = False
     HAS_RUN_ANSIBLE = False
 
-    def __init__(self, hostname, sudo=False, sudo_user=None, *args, **kwargs):
+    def __init__(self, hostname, sudo=False, sudo_user=None, sudo_method='sudo', *args, **kwargs):
         self._encoding = None
         self._host = None
         self.hostname = hostname
         self.sudo = sudo
         self.sudo_user = sudo_user
+        self.sudo_method = sudo_method
         super().__init__()
 
     def set_host(self, host):
@@ -173,9 +174,9 @@ class BaseBackend:
 
     def get_sudo_command(self, command, sudo_user):
         if sudo_user is None:
-            return self.quote("sudo /bin/sh -c %s", command)
+            return self.quote("%s /bin/sh -c %s", self.sudo_method, command)
         return self.quote(
-            "sudo -u %s /bin/sh -c %s", sudo_user, command)
+            "%s -u %s /bin/sh -c %s", self.sudo_method, sudo_user, command)
 
     def get_command(self, command, *args):
         command = self.quote(command, *args)

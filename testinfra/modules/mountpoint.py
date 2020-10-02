@@ -96,6 +96,8 @@ class MountPoint(Module):
     def get_module_class(cls, host):
         if host.system_info.type == "linux":
             return LinuxMountPoint
+        if host.system_info.type == "openbsd":
+            return OpenBSDMountPoint
         if host.system_info.type.endswith("bsd"):
             return BSDMountPoint
         raise NotImplementedError
@@ -133,6 +135,20 @@ class LinuxMountPoint(MountPoint):
                 "options": splitted[3].split(","),
             }
 
+
+class OpenBSDMountPoint(MountPoint):
+
+    @classmethod
+    def _iter_mountpoints(cls):
+        check_output = cls(None).check_output
+        for line in check_output("mount").splitlines():
+            splitted = line.split()
+            yield {
+                "path": splitted[2],
+                "device": splitted[0],
+                "filesystem": splitted[4],
+                "options": ''.join(splitted[5:])[1:-1].split(","),
+            }
 
 class BSDMountPoint(MountPoint):
 
